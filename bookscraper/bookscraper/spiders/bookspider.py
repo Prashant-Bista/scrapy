@@ -1,4 +1,5 @@
 import scrapy
+from bookscraper.items import BookItem
 
 class BookspiderSpider(scrapy.Spider):
     name = "bookspider"
@@ -26,11 +27,13 @@ class BookspiderSpider(scrapy.Spider):
                 yield response.follow(next_url,callback=self.parse)
     def parse_book(self,response):
         rows=response.css('table tr')
-        yield{
-            "name":response.css('div.product_main h1::text').get(),
-            'UPC':rows[0].css('td::text').get(),
-            'Product_Type':rows[1].css('td::text').get(),
-            'Price':response.css('p.price_color::text').get(),
-            'Rating': response.css('p.star-rating').attrib['class']
-        }
-    
+        book_item=BookItem()
+        book_item['name']=response.css('div.product_main h1::text').get()
+        book_item['UPC']=rows[0].css('td::text').get()
+        book_item['Product_Type']=rows[1].css('td::text').get()
+        book_item['Price']=response.css('p.price_color::text').get()
+        book_item['Rating']= response.css('p.star-rating').attrib['class']
+        book_item['Genre']=response.xpath('//*[@id="default"]/div/div/ul/li[3]/a/text()').get() 
+        book_item['Availability']=rows[5].css('td::text').get()
+
+        yield book_item
